@@ -62,7 +62,7 @@ class VanillaTableBertInputFormatter(TableBertBertInputFormatter):
 
         return input, span_map
 
-    def get_input(self, context: List[str], table: Table, trim_long_table=False):
+    def get_input(self, context: List[str], table: Table, trim_long_table=True):
         row_data = [
             column.sample_value_tokens
             for column in table.header
@@ -70,7 +70,7 @@ class VanillaTableBertInputFormatter(TableBertBertInputFormatter):
 
         return self.get_row_input(context, table.header, row_data, trim_long_table=trim_long_table)
 
-    def get_row_input(self, context: List[str], header: List[Column], row_data: List[Any], trim_long_table=False):
+    def get_row_input(self, context: List[str], header: List[Column], row_data: List[Any], trim_long_table=True):
         if self.config.context_first:
             table_tokens_start_idx = len(context) + 2  # account for [CLS] and [SEP]
             # account for [CLS] and [SEP], and the ending [SEP]

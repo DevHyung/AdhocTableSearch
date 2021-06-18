@@ -75,7 +75,7 @@ class VerticalAttentionTableBertInputFormatter(VanillaTableBertInputFormatter):
 
         # Add content select by N-GRAM overap ratio
         # table_data = self.get_row_highest_ngram(context, table.data, n=2, k=self.config.sample_row_num)
-        table_data = table.data 
+        table_data = table.data[:1]
 
         for row_data in table_data:
             if isinstance(row_data, dict):
