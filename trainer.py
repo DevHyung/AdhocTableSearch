@@ -44,12 +44,13 @@ def train(args):
     train_params["accumulate_grad_batches"] = args.accumulate_grad_batches
     train_params["profiler"] = args.profiler 
 
-    model = QueryTableMatcher(args)
+
     trainer = pl.Trainer.from_argparse_args(args,
                                             callbacks=[checkpoint_callback],
                                             logger=logger,
+                                            reload_dataloaders_every_epoch=True,
                                             **train_params)
-
+    model = QueryTableMatcher(trainer, args)
     if args.do_train:
         trainer.fit(model, data_module)
 

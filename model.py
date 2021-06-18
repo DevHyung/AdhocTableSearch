@@ -10,7 +10,8 @@ from table_bert import TableBertModel
 
 
 class QueryTableMatcher(pl.LightningModule):
-    def __init__(self, hparams):
+    def __init__(self, trainer, hparams):
+        self.trainer = trainer
         super().__init__()
         self.hparams = hparams
         self.Tmodel = TableBertModel.from_pretrained(self.hparams.tabert_path, self.hparams.config_file)
@@ -54,12 +55,53 @@ class QueryTableMatcher(pl.LightningModule):
         #     # reps.append(M.squeeze(0))
         # return torch.stack(reps)   # B x 1
         # return self.linear(torch.stack(reps))   # B x 1
-
+    
+    def reset_train_val_dataloaders(self, model):
+        if not self.trainer.reload_dataloaders_every_epoch:
+            self.trainer.reset_train_dataloader(model)
+            
+    def on_train_epoch_start(self):
+        """
+        Called in the training loop at the very beginning of the epoch.
+        """
+        """
+        TODO0 -> Done: 
+        1. 0 epoch 제외 배치시작전 Train dataloader 갱신
+        """
+        if self.current_epoch != 0:
+            print(">>> on_train_epoch_start")
+            print(">>> Current EPOCH : ", self.current_epoch)
+            model = self.trainer.get_model()
+            
+            # reset train dataloader
+            if self.trainer.reload_dataloaders_every_epoch:
+                self.trainer.reset_train_dataloader(model)
+    
+    def training_epoch_end(self, unused = None):
+        """
+        Called in the training loop at the very end of the epoch.
+        To access all batch outputs at the end of the epoch, either:
+        1. Implement `training_epoch_end` in the LightningModule OR
+        2. Cache data across steps on the attribute(s) of the `LightningModule` and access them in this hook
+        """
+        print(">>> on_train_epoch_end")
+        print(">>> Current EPOCH : ", self.current_epoch)
+        """
+        TODO1: batch 끝나고 negative 평가 다시 
+        1. model = self.trainer.get_model() 을 이용하여 
+           Query - neg_table 간의 Simil score 를 계산
+        
+        2. 계산값 ordering하여 data/bench/${i] nagative_order 파일에 저장 
+        
+        """ 
+            
     def training_step(self, batch, batch_idx):
+
+        #print(" self.trainer.reload_dataloaders_every_epoch : ", self.trainer.reload_dataloaders_every_epoch)
         query, tables, captions, rel = batch
         outputs = self(query, tables, captions)
         # loss = F.binary_cross_entropy_with_logits(outputs, rel.unsqueeze(1))
-        loss = F.mse_loss(outputs, rel.unsqueeze(1))
+        loss = F.mse_loss(outputs, rel.unsqueeze(1)) # [B, B] -> [B, 1]?
         # logit_matrix = torch.cat([tp_cos.unsqueeze(1), tn_cos.unsqueeze(1)], dim=1)  # [B, 2]
         # lsm = F.log_softmax(logit_matrix, dim=1)
         # loss = -1.0 * lsm[:, 0]
