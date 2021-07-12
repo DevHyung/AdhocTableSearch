@@ -256,9 +256,10 @@ class QueryTableDataset(Dataset):
                     query_dict[qid] = query_tokenized
 
                 table_reps, caption_rep = encode_tables(jsonStr, self.is_slice, query, table_tokenizer, min_row)
-                # ret: 0, 1, 2
+                # (Q, Pos_Table, Neg_Table)
                 rel = 1 if rel > 0 else 0
                 data.append((query_dict[qid], table_reps, [caption_rep] * len(table_reps), rel))
+
 
         # Save
         with open(os.path.join(processed_dir, self.ids_file), 'wb') as f:

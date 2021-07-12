@@ -1,8 +1,8 @@
 #!/bin/bash
-
-for i in {1..5}
+export CUDA_VISIBLE_DEVICES=1
+for i in {1..1}
 do
-    DATA=./data/$i
+    DATA=./data/bench/$i
     echo $DATA
     
     mkdir -p ${DATA}/processed
@@ -22,18 +22,17 @@ do
                       --gpus 1 \
                       --precision 16 \
                       --max_epochs 10 \
-		      --weight_decay 0.0 \
-		      --min_row 30 \
+                      --weight_decay 0.0 \
+                      --min_row 20 \
                       --lr 5e-5 \
                       --do_train \
                       --stocahstic_weight_avg \
-                      # --gradient_clip_val 1.0 \
                       --train_batch_size 2 \
                       --valid_batch_size 1 \
                       --output_dir output/${i} \
                       --accumulate_grad_batches 8 \
-		      --seed 20200401 
-    
+                      --seed 20200401 
+            
     CKPT=`ls output/${i} | sort -k3 -t'=' | head -1`
     
     echo ${CKPT}

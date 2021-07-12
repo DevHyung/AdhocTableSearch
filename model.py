@@ -92,11 +92,43 @@ class QueryTableMatcher(pl.LightningModule):
            Query - neg_table 간의 Simil score 를 계산
         
         2. 계산값 ordering하여 data/bench/${i] nagative_order 파일에 저장 
+        """
+        """
+        model = self.trainer.get_model()
         
-        """ 
+        index = DenseHNSWFlatIndexer(768, 1000)
+        # test 셋에서 데이터 불러와서
+        # Q-T 가 Rel 0이라했는데 Q랑 T가 가까운게 찐 hard neg 인가 
+        # 아니면 
+        index.index_data(table_vectors)
+        index.serialize('dtr_hnsw')
+        
+        Q의 Pos 10개 neg 40개 
+        => 만들어지는 Q PT NT 는 10 * 40 = 400개 
+        
+        Q1 - T1 = Rel 1
+        Q1 - T2 = Rel 0
+        Q1 - T3 = Rel 2
+        Q1 - T4 = Rel 0
+        ...
+        Q1 - T50 = Rel 0
+        #            PT - Q ------------NT :
+        #            T2 -T1-----------T4
+        top_ids_and_scores = index.search_knn(np.array(query_vectors), args.topk)
+        
+        top_ids_and_scores = index.search_knn(np.array(pos_doc), args.topk)
+        ######################
+        # T2 score
+        # T4 Score 
+        # ... 10개
+        # ... 40개
+        #
+        # (Q ,PT, NT)
+        """
+        
+        
             
     def training_step(self, batch, batch_idx):
-
         #print(" self.trainer.reload_dataloaders_every_epoch : ", self.trainer.reload_dataloaders_every_epoch)
         query, tables, captions, rel = batch
         outputs = self(query, tables, captions)
@@ -168,6 +200,10 @@ class QueryTableMatcher(pl.LightningModule):
             },
             {
                 "params": [p for n, p in self.Tmodel.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+            {
+                "params": [p for n, p in self.attention.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             },
         ]
